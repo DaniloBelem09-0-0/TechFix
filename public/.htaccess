@@ -1,0 +1,12 @@
+<IfModule mod_rewrite.c>
+    Options -MultiViews
+    RewriteEngine On
+
+    # Se a requisição não for para um arquivo real (-f)
+    # nem para um diretório real (-d)...
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    
+    # ...redirecione tudo para o index.php
+    RewriteRule ^ index.php [QSA,L]
+</IfModule>

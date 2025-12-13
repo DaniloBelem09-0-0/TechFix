@@ -1,0 +1,17 @@
+docker exec -it techfix_app ./vendor/bin/openapi src -o public/openapi.yaml
+
+docker restart techfix_app
+
+docker exec -it techfix_app composer dump-autoload
+
+docker exec -it techfix_app php bin/doctrine orm:schema-tool:drop --force
+docker exec -it techfix_app php bin/doctrine orm:schema-tool:create
+
+Email: admin@techfix.com
+Senha: admin123
+
+e29d0cb0ec30fa56e6261ee4a62e037519a8bc21
+
+GITHUB_CLIENT_ID=seu_id_aqui
+GITHUB_CLIENT_SECRET=seu_secret_aqui
+GITHUB_REDIRECT_URI=http://localhost:8085/api/auth/github/callback

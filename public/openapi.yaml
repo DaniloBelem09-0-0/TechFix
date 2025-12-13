@@ -1,0 +1,292 @@
+openapi: 3.0.0
+info:
+  title: 'TechFix API'
+  description: 'API de Service Desk TechFix'
+  contact:
+    email: suporte@techfix.com
+  version: 1.0.0
+servers:
+  -
+    url: 'http://localhost:8085'
+    description: 'Servidor Docker Local'
+paths:
+  /api/assets:
+    get:
+      tags:
+        - Assets
+      summary: 'Busca assets por parâmetros (name, patrimony_code, serial_number) ou retorna todos'
+      operationId: 824aa2edd49b360fc1d8b540f4098d88
+      parameters:
+        -
+          name: name
+          in: query
+          required: false
+          schema:
+            type: string
+        -
+          name: patrimony_code
+          in: query
+          required: false
+          schema:
+            type: string
+        -
+          name: serial_number
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'Asset(s) encontrado(s)'
+        '404':
+          description: 'Asset não encontrado'
+      security:
+        -
+          bearerAuth: []
+    post:
+      tags:
+        - Assets
+      summary: 'Cadastra um novo equipamento (Ativo)'
+      description: 'Cria um novo item no inventário. Requer permissão de ADMIN ou TECHNICIAN.'
+      operationId: 21bafbcc1c02c5b4eb07742d062ded1e
+      requestBody:
+        description: 'Dados do equipamento'
+        required: true
+        content:
+          application/json:
+            schema:
+              required:
+                - name
+                - patrimony_code
+                - serial_number
+              properties:
+                name:
+                  type: string
+                  example: 'Notebook Dell Latitude 5420'
+                patrimony_code:
+                  description: 'Código único de patrimônio'
+                  type: string
+                  example: PAT-2024-001
+                serial_number:
+                  description: 'Número de série do fabricante'
+                  type: string
+                  example: JFK-5542-X
+              type: object
+      responses:
+        '201':
+          description: 'Ativo criado com sucesso'
+          content:
+            application/json:
+              schema:
+                properties:
+                  id: { type: integer, example: 10 }
+                  name: { type: string, example: 'Notebook Dell Latitude 5420' }
+                  patrimony_code: { type: string, example: PAT-2024-001 }
+                  serial_number: { type: string, example: JFK-5542-X }
+                type: object
+        '400':
+          description: 'Erro de validação ou Patrimônio já existente'
+          content:
+            application/json:
+              schema:
+                properties:
+                  error: { type: string, example: 'Patrimônio já cadastrado.' }
+                type: object
+        '401':
+          description: 'Token não fornecido ou inválido'
+        '403':
+          description: 'Acesso negado (Role insuficiente)'
+      security:
+        -
+          bearerAuth: []
+  '/api/assets/{id}':
+    get:
+      tags:
+        - Assets
+      summary: 'Busca asset por ID'
+      operationId: 25236680e3407189f602e63dd8416956
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'Asset encontrado'
+        '404':
+          description: 'Asset não encontrado'
+      security:
+        -
+          bearerAuth: []
+    delete:
+      tags:
+        - Assets
+      summary: 'Deleta asset por ID'
+      operationId: 52dfc4dcd9a74a9abc7dece4e525c09a
+      parameters:
+        -
+          name: id
+          in: path
+          description: 'Identificador do asset'
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 'Asset deletado com sucesso'
+        '404':
+          description: 'Asset não encontrado'
+          content:
+            application/json:
+              schema:
+                properties:
+                  message: { type: string }
+                type: object
+        '400':
+          description: 'Bad request'
+        '401':
+          description: Unauthorized
+      security:
+        -
+          bearerAuth: []
+  /api/login:
+    post:
+      tags:
+        - Auth
+      summary: 'Autentica um usuário e retorna um JWT'
+      operationId: ea61842e5157fc6ed116bb417d005c77
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                email:
+                  type: string
+                  example: admin@techfix.com
+                password:
+                  type: string
+                  example: admin123
+              type: object
+      responses:
+        '200':
+          description: 'Login realizado com sucesso'
+          content:
+            application/json:
+              schema:
+                properties:
+                  token: { description: 'JWT Token', type: string }
+                type: object
+        '401':
+          description: 'Credenciais inválidas'
+  /api/users:
+    get:
+      tags:
+        - Users
+      summary: 'Busca usuário por Email'
+      operationId: f6209e0760694d97a84f2d7c280983bb
+      parameters:
+        -
+          name: email
+          in: query
+          description: 'Email do usuário para busca'
+          required: true
+          schema:
+            type: string
+            format: email
+      responses:
+        '200':
+          description: 'Usuário encontrado'
+        '404':
+          description: 'Usuário não encontrado'
+      security:
+        -
+          bearerAuth: []
+    post:
+      tags:
+        - Users
+      summary: 'Cria um novo usuário'
+      operationId: 85acc42a7f34e86f63ae197897662016
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                name:
+                  type: string
+                  example: 'Danilo API'
+                email:
+                  type: string
+                  format: email
+                  example: api@techfix.com
+                password:
+                  type: string
+                  format: password
+                  example: '123456'
+                profile:
+                  type: string
+                  example: collaborator
+              type: object
+      responses:
+        '201':
+          description: 'Usuário criado com sucesso'
+          content:
+            application/json:
+              schema:
+                properties:
+                  id: { type: integer }
+                  name: { type: string }
+                  email: { type: string }
+                  profile: { type: string }
+                type: object
+        '400':
+          description: 'Erro de validação'
+        '401':
+          description: 'Token não fornecido ou inválido'
+        '403':
+          description: 'Acesso negado (apenas Admin)'
+      security:
+        -
+          bearerAuth: []
+  '/api/users/{id}':
+    get:
+      tags:
+        - Users
+      summary: 'Busca usuário por ID'
+      operationId: 64072fcf97152c3021bc80051de9dd21
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'Usuário encontrado'
+        '404':
+          description: 'Usuário não encontrado'
+      security:
+        -
+          bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      description: 'Insira o token JWT aqui'
+      bearerFormat: JWT
+      scheme: bearer
+tags:
+  -
+    name: Assets
+    description: Assets
+  -
+    name: Auth
+    description: Auth
+  -
+    name: Users
+    description: Users

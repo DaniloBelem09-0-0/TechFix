@@ -1,0 +1,42 @@
+graph TD
+    %% --- Componentes ---
+    %% Usamos colchetes [ ] para retângulos padrão
+    %% Usamos parênteses e colchetes [( )] para representar bancos de dados
+
+    User[👤 Usuário / Navegador]
+    LB[⚖️ Load Balancer]
+    Gateway[🚪 API Gateway]
+
+    %% Agrupando os serviços de backend para organização visual
+    subgraph Camada de Aplicação
+        CartService[🛒 Serviço de Carrinho API]
+        OrderService[💲 Serviço de Pedidos/Checkout]
+        ProductService[📦 Serviço de Catálogo]
+    end
+
+    %% Os armazenamentos de dados
+    RedisCache[(⚡ Cache de Carrinho\nRedis - Memória Rápida)]
+    MainDB[(🗄️ Banco de Dados Principal\nMySQL/Postgres - Persistente)]
+
+
+    %% --- Fluxos ---
+
+    %% 1. Entrada
+    User -->|Requisição HTTP| LB
+    LB --> Gateway
+
+    %% 2. Navegação Normal (Catálogo)
+    Gateway -->|Busca Produtos| ProductService
+    ProductService -->|Lê Catálogo| MainDB
+
+    %% 3. Fluxo do Carrinho (O "Web Cache")
+    %% Linha grossa para enfatizar o caminho de alta performance
+    Gateway ==>|Adicionar/Ver Itens| CartService
+    CartService <==>|⚡ Leitura/Escrita instantânea do estado| RedisCache
+
+    %% 4. Fluxo de Checkout (A transição)
+    Gateway -->|Finalizar Compra POST| OrderService
+    OrderService -->|1. Obtém dados finais do carrinho| CartService
+    OrderService -->|2. Grava pedido permanente| MainDB
+    %% Linha pontilhada para indicar uma ação secundária (limpeza)
+    OrderService -.->|3. Deleta carrinho após sucesso| RedisCache
