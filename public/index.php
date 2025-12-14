@@ -3,8 +3,12 @@
 use FastRoute\RouteCollector;
 use TechFix\Core\UseCases\Asset\CreateAssetUseCase;
 use TechFix\Core\UseCases\Asset\DeleteAssetUseCase;
+
+use TechFix\Core\UseCases\Auth\ConfirmTwoFactorUseCase;
+use TechFix\Core\UseCases\Login\LoginGithubUseCase;
 use TechFix\Infrastructure\Http\Controller\Asset\DeleteAssetController;
-use TechFix\Infrastructure\Http\Controller\GithubAuthController;
+use TechFix\Infrastructure\Http\Controller\Auth\TwoFactorController;
+use TechFix\Infrastructure\Http\Controller\Login\GithubAuthController;
 use TechFix\Infrastructure\Persistence\Doctrine\EntityManagerFactory;
 use TechFix\Infrastructure\Persistence\Doctrine\Repository\DoctrineUserRepository;
 use TechFix\Infrastructure\Persistence\Doctrine\Repository\DoctrineProfileRepository;
@@ -63,10 +67,8 @@ $dispatcher = FastRoute\simpleDispatcher(function(RouteCollector $r) {
         'roles' => ['admin', 'technician'] 
     ]);
 
-    // Rotas para encontrar assets (single e lista)
     $r->addRoute('GET', '/api/assets/{id:\d+}', [
         'controller' => FindAssetController::class,
-        // ajuste os roles conforme sua regra de negócio
         'roles' => ['admin', 'technician', 'collaborator']
     ]);
 
@@ -82,6 +84,8 @@ $dispatcher = FastRoute\simpleDispatcher(function(RouteCollector $r) {
 
     $r->addRoute('GET', '/api/auth/github/url', ['controller' => GithubAuthController::class, 'roles' => []]);
     $r->addRoute('GET', '/api/auth/github/callback', ['controller' => GithubAuthController::class, 'roles' => []]);
+    $r->addRoute('POST', '/api/auth/2fa/generate', ['controller' => TwoFactorController::class, 'roles' => []]);
+    $r->addRoute('POST', '/api/auth/2fa/confirm', ['controller' => TwoFactorController::class, 'roles' => []]);
 });
 
 $httpMethod = $_SERVER['REQUEST_METHOD'];
@@ -154,16 +158,27 @@ switch ($routeInfo[0]) {
             $controller = new DeleteAssetController($useCase);
             $controller->handle($vars, $_GET);
         }
-        if ($controllerClass === GithubAuthController::class) {
-            // Requer criar o DoctrineProfileRepository e DoctrineUserRepository antes
-            $profileRepo = new DoctrineProfileRepository($entityManager);
-            $useCase = new LoginGithubUseCase($userRepository, $profileRepo);
-            $controller = new GithubAuthController($useCase);
-            
+        else if ($controllerClass === GithubAuthController::class) {
+            $profileRepository = new DoctrineProfileRepository($entityManager);
+            $createUserUseCase = new CreateUserUseCase($userRepository, $profileRepository);
+            $loginUseCase = new LoginGithubUseCase($userRepository, $createUserUseCase);
+            $controller = new GithubAuthController($loginUseCase);
+
             if (strpos($uri, 'callback') !== false) {
                 $controller->callback();
             } else {
                 $controller->getUrl();
+            }
+        }
+        else if ($controllerClass === TwoFactorController::class) {
+            $generateUseCase = new TechFix\Core\UseCases\Auth\GenerateTwoFactorUseCase($userRepository);
+            $confirmUseCase = new ConfirmTwoFactorUseCase($userRepository);
+            $controller = new TwoFactorController($generateUseCase, $confirmUseCase);
+
+            if (strpos($uri, 'generate') !== false) {
+                $controller->generate();
+            } else {
+                $controller->confirm();
             }
         }
         break;

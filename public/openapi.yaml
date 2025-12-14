@@ -152,6 +152,39 @@ paths:
       security:
         -
           bearerAuth: []
+  /api/auth/github/url:
+    get:
+      tags:
+        - Auth
+      summary: 'Obtém a URL de login do GitHub'
+      operationId: d09880eee1ad425dd4f54a9848ae1fbe
+      responses:
+        '200':
+          description: 'URL para redirecionamento'
+          content:
+            application/json:
+              schema:
+                properties:
+                  url: { type: string }
+                type: object
+  /api/auth/github/callback:
+    get:
+      tags:
+        - Auth
+      summary: 'Callback do GitHub'
+      operationId: defaaf46b39a4b78a6fcbff4467ccb58
+      parameters:
+        -
+          name: code
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'JWT Gerado'
+        '400':
+          description: Erro
   /api/login:
     post:
       tags:
@@ -182,6 +215,50 @@ paths:
                 type: object
         '401':
           description: 'Credenciais inválidas'
+  /api/tickets:
+    post:
+      tags:
+        - Tickets
+      summary: 'Cria um novo ticket'
+      operationId: a5e53fa29363de437aef58ddedc80bda
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                title:
+                  type: string
+                  example: 'Impressora não funciona'
+                description:
+                  type: string
+                  example: 'A impressora do setor financeiro está com erro E12'
+                asset_id:
+                  type: integer
+                  example: 123
+                priority:
+                  type: string
+                  example: high
+              type: object
+      responses:
+        '201':
+          description: 'Ticket criado com sucesso'
+          content:
+            application/json:
+              schema:
+                properties:
+                  ticket_id: { type: integer }
+                  status: { type: string, example: created }
+                type: object
+        '400':
+          description: 'Erro de validação'
+        '401':
+          description: 'Token não fornecido ou inválido'
+        '403':
+          description: 'Acesso negado'
+      security:
+        -
+          bearerAuth: []
   /api/users:
     get:
       tags:
@@ -287,6 +364,9 @@ tags:
   -
     name: Auth
     description: Auth
+  -
+    name: Tickets
+    description: Tickets
   -
     name: Users
     description: Users

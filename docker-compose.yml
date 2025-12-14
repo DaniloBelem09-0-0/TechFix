@@ -5,6 +5,11 @@ services:
   app:
     build: .
     container_name: techfix_app
+
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      
     ports:
       - "8085:80"
     volumes:

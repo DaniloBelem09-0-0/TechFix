@@ -1,20 +1,18 @@
 <?php
 
-namespace TechFix\Infrastructure\Http\Controller;
+namespace TechFix\Infrastructure\Http\Controller\Login;
 
 use League\OAuth2\Client\Provider\Github;
-use TechFix\Core\Domain\Repository\UserRepositoryInterface;
-use TechFix\Core\UseCases\Login\LoginGithubUseCase;
 use League\OAuth2\Client\Provider\GithubResourceOwner;
+use TechFix\Core\UseCases\Login\LoginGithubUseCase;
 use OpenApi\Attributes as OA;
 
 class GithubAuthController
 {
     private LoginGithubUseCase $useCase;
     private Github $provider;
-    private UserRepositoryInterface $userRepository;
 
-    public function __construct(LoginGithubUseCase $useCase, UserRepositoryInterface $userRepository)
+    public function __construct(LoginGithubUseCase $useCase)
     {
         $this->useCase = $useCase;
         
@@ -23,8 +21,6 @@ class GithubAuthController
             'clientSecret' => $_ENV['GITHUB_CLIENT_SECRET'],
             'redirectUri'  => $_ENV['GITHUB_REDIRECT_URI'],
         ]);
-
-        $this->userRepository = $userRepository;
     }
 
     #[OA\Get(
@@ -65,6 +61,8 @@ class GithubAuthController
     )]
     public function callback(): void
     {
+        if (ob_get_level()) ob_end_clean();
+
         if (empty($_GET['code'])) {
             http_response_code(400);
             echo json_encode(['error' => 'Código não fornecido']);
@@ -76,19 +74,19 @@ class GithubAuthController
                 'code' => $_GET['code']
             ]);
 
-
-            /** @var GithubResourceOwner $user */
             $userGithub = $this->provider->getResourceOwner($token);
 
-            $user = $this->userRepository->findByEmail($userGithub->getEmail());
-
-            if (!$user) {
-                throw new \Exception('Usuário não encontrado.');
+            if (!$userGithub instanceof GithubResourceOwner) {
+                throw new \Exception("Dados inválidos retornados pelo GitHub.");
             }
 
-            $loginInputDto = new \TechFix\Core\UseCases\DTO\LoginInputDto($user->getEmail(), $user->getId());
+            $githubUserData = [
+                'email'    => $userGithub->getEmail(),
+                'name'     => $userGithub->getName() ?? $userGithub->getNickname(),
+                'profile' => 'COLLABORATOR'
+            ];
 
-            $outputDto = $this->useCase->execute($loginInputDto);
+            $outputDto = $this->useCase->execute($githubUserData);
 
             header('Content-Type: application/json');
             echo json_encode([
@@ -101,5 +99,6 @@ class GithubAuthController
             http_response_code(400);
             echo json_encode(['error' => 'GitHub Login Failed: ' . $e->getMessage()]);
         }
+        exit;
     }
 }

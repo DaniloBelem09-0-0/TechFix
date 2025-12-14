@@ -48,7 +48,9 @@ class ComposerStaticInita312dc708cafe6b18289e6174e20c707
             'Psr\\Http\\Client\\' => 16,
             'Psr\\Container\\' => 14,
             'Psr\\Cache\\' => 10,
+            'PragmaRX\\Google2FA\\' => 19,
             'PhpParser\\' => 10,
+            'ParagonIE\\ConstantTime\\' => 23,
             'PHPStan\\PhpDocParser\\' => 21,
         ),
         'O' =>
@@ -81,6 +83,11 @@ class ComposerStaticInita312dc708cafe6b18289e6174e20c707
             'Doctrine\\Common\\Lexer\\' => 22,
             'Doctrine\\Common\\Collections\\' => 28,
             'Doctrine\\Common\\' => 16,
+            'DASPRiD\\Enum\\' => 13,
+        ),
+        'B' =>
+        array (
+            'BaconQrCode\\' => 12,
         ),
     );
 
@@ -166,9 +173,17 @@ class ComposerStaticInita312dc708cafe6b18289e6174e20c707
         array (
             0 => __DIR__ . '/..' . '/psr/cache/src',
         ),
+        'PragmaRX\\Google2FA\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/pragmarx/google2fa/src',
+        ),
         'PhpParser\\' =>
         array (
             0 => __DIR__ . '/..' . '/nikic/php-parser/lib/PhpParser',
+        ),
+        'ParagonIE\\ConstantTime\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/paragonie/constant_time_encoding/src',
         ),
         'PHPStan\\PhpDocParser\\' =>
         array (
@@ -238,6 +253,14 @@ class ComposerStaticInita312dc708cafe6b18289e6174e20c707
         'Doctrine\\Common\\' =>
         array (
             0 => __DIR__ . '/..' . '/doctrine/event-manager/src',
+        ),
+        'DASPRiD\\Enum\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/dasprid/enum/src',
+        ),
+        'BaconQrCode\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/bacon/bacon-qr-code/src',
         ),
     );
 
